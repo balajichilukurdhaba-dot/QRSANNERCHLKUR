@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menu Poster | Balaji Chilukur Family Dhaba</title>
+  <meta name="description" content="Official QR Code Table Menu Poster for Balaji Chilukur Family Dhaba. Scan to explore 204 pure vegetarian delicacies." />
+  <link rel="icon" href="../logo.png?v=20260913" type="image/png" />
+
+  <!-- Google Fonts: Cinzel, Outfit, Noto Serif Telugu -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Noto+Serif+Telugu:wght@500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       Print & Screen Styling for Balaji Chilukur Dhaba QR Menu Poster
+       ========================================================================== */
+    :root {
+      --poster-green: #0e3820;
+      --poster-green-dark: #072213;
+      --poster-gold: #cda75f;
+      --poster-gold-dark: #9c7a36;
+      --poster-gold-light: #f3e6c8;
+      --poster-cream: #faf6ed;
+      --poster-cream-light: #fffdf9;
+      --poster-ink: #173a2d;
+      --poster-muted: #5e6b60;
+      --poster-shadow: rgba(14, 56, 32, 0.12);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #212529;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--poster-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Floating Action Bar (Hidden during Print) */
+    .action-bar {
+      position: fixed;
+      top: 16px;
+      z-index: 100;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: rgba(14, 56, 32, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 10px 18px;
+      border-radius: 9999px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--poster-gold);
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 9999px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-print {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(217, 119, 6, 0.4);
+    }
+
+    .btn-print:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(217, 119, 6, 0.6);
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ==========================================================================
+       MAIN POSTER CANVAS (Portrait Aspect Ratio, Print Optimized)
+       ========================================================================== */
+    .poster-canvas {
+      position: relative;
+      width: 100%;
+      max-width: 580px;
+      background-color: var(--poster-cream);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+      border-radius: 40px;
+      overflow: hidden;
+      padding: 16px;
+      margin-top: 48px;
+      margin-bottom: 24px;
+    }
+
+    /* Outer Green Border */
+    .poster-outer-frame {
+      border: 6px solid var(--poster-green);
+      border-radius: 34px;
+      padding: 10px;
+      position: relative;
+    }
+
+    /* Inner Gold Border */
+    .poster-inner-frame {
+      border: 2px solid var(--poster-gold);
+      border-radius: 24px;
+      padding: 30px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: radial-gradient(circle at 50% 20%, #ffffff 0%, var(--poster-cream) 70%);
+      position: relative;
+    }
+
+    /* Corner Gold Accent Filigree */
+    .corner-ornament {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      color: var(--poster-gold);
+      font-size: 14px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .corner-tl { top: 8px; left: 8px; }
+    .corner-tr { top: 8px; right: 8px; }
+    .corner-bl { bottom: 8px; left: 8px; }
+    .corner-br { bottom: 8px; right: 8px; }
+
+    /* Top Logo */
+    .poster-logo-wrap {
+      margin-bottom: 12px;
+    }
+
+    .poster-logo {
+      display: block;
+      width: 92px;
+      height: auto;
+      margin: 0 auto;
+      filter: drop-shadow(0 4px 8px rgba(14, 56, 32, 0.15));
+    }
+
+    /* Brand Typography */
+    .poster-brand-title {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 31px;
+      font-weight: 800;
+      color: var(--poster-green);
+      letter-spacing: 2.2px;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    .poster-brand-sub {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--poster-gold-dark);
+      letter-spacing: 4px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    /* Decorative Gold Divider */
+    .poster-gold-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 82%;
+      margin: 12px auto;
+    }
+
+    .poster-gold-divider .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--poster-gold), transparent);
+    }
+
+    .poster-gold-divider .divider-gem {
+      color: var(--poster-gold);
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .divider-gem::before, .divider-gem::after {
+      content: '•';
+      font-size: 9px;
+      color: var(--poster-gold-dark);
+    }
+
+    /* Pure Veg Pill */
+    .poster-pure-veg-tag {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--poster-muted);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Section Callout */
+    .poster-cta-title {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--poster-green);
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .poster-cta-desc {
+      font-size: 14px;
+      color: var(--poster-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ==========================================================================
+       QR CODE CONTAINER CARD
+       ========================================================================== */
+    .poster-qr-card {
+      margin: 18px auto 14px;
+      background: #ffffff;
+      border: 2px solid var(--poster-gold);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: 0 10px 28px rgba(14, 56, 32, 0.09);
+      display: inline-block;
+      position: relative;
+    }
+
+    .poster-qr-img {
+      display: block;
+      width: 250px;
+      height: 250px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    /* QR Scan Hints */
+    .poster-scan-title {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--poster-green);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .poster-dish-count {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 14.5px;
+      color: var(--poster-gold-dark);
+      font-weight: 600;
+      font-style: italic;
+      margin-top: 3px;
+    }
+
+    .poster-instructions {
+      font-size: 12px;
+      color: var(--poster-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .poster-url-badge {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 3px 12px;
+      background: rgba(14, 56, 32, 0.06);
+      border-radius: 9999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--poster-green);
+      letter-spacing: 0.3px;
+    }
+
+    /* ==========================================================================
+       BEAUTIFUL LOCATION FOOTER SECTION
+       ========================================================================== */
+    .poster-location-box {
+      width: 100%;
+      margin-top: 18px;
+      padding: 16px 18px 14px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 230, 200, 0.45) 100%);
+      border: 1.5px solid rgba(205, 167, 95, 0.45);
+      border-radius: 16px;
+      box-shadow: 0 4px 14px rgba(14, 56, 32, 0.05);
+      position: relative;
+    }
+
+    .location-header-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--poster-gold-dark);
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .location-branches-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      text-align: left;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(205, 167, 95, 0.4);
+    }
+
+    @media (max-width: 480px) {
+      .location-branches-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    .branch-card {
+      background: rgba(255, 255, 255, 0.7);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(205, 167, 95, 0.25);
+    }
+
+    .branch-label {
+      font-family: 'Cinzel', Georgia, serif;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--poster-green);
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .branch-telugu {
+      font-family: 'Noto Serif Telugu', Georgia, serif;
+      font-size: 11px;
+      color: var(--poster-gold-dark);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .branch-address {
+      font-size: 11px;
+      color: var(--poster-muted);
+      line-height: 1.35;
+    }
+
+    /* Timings & Service strip */
+    .location-service-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--poster-green);
+      flex-wrap: wrap;
+    }
+
+    .service-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #ffffff;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      border: 1px solid rgba(14, 56, 32, 0.12);
+      font-size: 11px;
+    }
+
+    .service-highlight {
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    /* Pure Veg Dhaba Stamp */
+    .pure-veg-stamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #16a34a;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==========================================================================
+       PRINT MEDIA QUERY (Exact Full-Bleed A4 Poster)
+       ========================================================================== */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 6mm;
+      }
+
+      body {
+        background: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+
+      .action-bar {
+        display: none !important;
+      }
+
+      .poster-canvas {
+        margin: 0 auto !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        border-radius: 28px !important;
+        page-break-inside: avoid !important;
+      }
+
+      .poster-outer-frame {
+        border-width: 5px !important;
+      }
+
+      .poster-inner-frame {
+        padding: 24px 20px 20px !important;
+      }
+
+      .poster-qr-img {
+        width: 260px !important;
+        height: 260px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Actions (Print & Navigation) -->
+  <div class="action-bar" role="toolbar" aria-label="Poster Actions">
+    <button class="action-btn btn-print" onclick="window.print()" type="button">
+      <span>🖨️</span>
+      <span>Print / Save PDF</span>
+    </button>
+    <a href="../menu/" class="action-btn btn-back">
+      <span>←</span>
+      <span>Live Menu</span>
+    </a>
+  </div>
+
+  <!-- The Standee / Poster Canvas -->
+  <main class="poster-canvas" id="poster">
+    <div class="poster-outer-frame">
+      <div class="poster-inner-frame">
+
+        <!-- Corner Filigree Ornaments -->
+        <div class="corner-ornament corner-tl" aria-hidden="true">✦</div>
+        <div class="corner-ornament corner-tr" aria-hidden="true">✦</div>
+        <div class="corner-ornament corner-bl" aria-hidden="true">✦</div>
+        <div class="corner-ornament corner-br" aria-hidden="true">✦</div>
+
+        <!-- BSD Golden Dhaba Crest Logo -->
+        <div class="poster-logo-wrap">
+          <img 
+            class="poster-logo" 
+            src="../logo.png?v=20260913" 
+            alt="Balaji Chilukur Family Dhaba Crest" 
+            width="92" 
+            height="103" 
+          />
+        </div>
+
+        <!-- Restaurant Branding -->
+        <h1 class="poster-brand-title">BALAJI CHILUKUR</h1>
+        <div class="poster-brand-sub">FAMILY DHABA</div>
+
+        <!-- Ornate Gold Divider -->
+        <div class="poster-gold-divider" aria-hidden="true">
+          <span class="divider-line"></span>
+          <span class="divider-gem">✦</span>
+          <span class="divider-line"></span>
+        </div>
+
+        <!-- Pure Vegetarian Tagline -->
+        <div class="poster-pure-veg-tag">
+          PURE VEGETARIAN • MADE WITH HEART
+        </div>
+
+        <!-- Menu Action Callout -->
+        <div class="poster-cta-title">EXPLORE OUR MENU</div>
+        <div class="poster-cta-desc">Fresh favourites, all in one place</div>
+
+        <!-- Centered QR Code Card -->
+        <div class="poster-qr-card">
+          <img 
+            class="poster-qr-img" 
+            src="../qr-code.svg" 
+            alt="QR Code to explore Balaji Chilukur Family Dhaba Digital Menu" 
+            width="250" 
+            height="250" 
+          />
+        </div>
+
+        <!-- Scan Prompt -->
+        <div class="poster-scan-title">SCAN TO VIEW THE MENU</div>
+        <div class="poster-dish-count">204 dishes · 24 categories</div>
+        <div class="poster-instructions">Open your phone camera and point here</div>
+        <div class="poster-url-badge">qrscanner-theta.vercel.app/menu/</div>
+
+        <!-- Beautiful Location Footer Section -->
+        <footer class="poster-location-box">
+          <div class="location-header-title">
+            <span>✦</span>
+            <span>VISIT US AT OUR DHABA LOCATIONS</span>
+            <span>✦</span>
+          </div>
+
+          <div class="location-branches-grid">
+            <!-- Branch 1: Chilukur -->
+            <div class="branch-card">
+              <div class="branch-label">
+                <span>📍</span>
+                <span>CHILUKUR BALAJI DHABA</span>
+              </div>
+              <div class="branch-telugu" lang="te">చిలుకూరు బాలాజీ రోడ్</div>
+              <p class="branch-address">
+                Chilukur Balaji Temple Road, Himayatnagar / Moinabad, Hyderabad
+              </p>
+            </div>
+
+            <!-- Branch 2: Pragathi Nagar -->
+            <div class="branch-card">
+              <div class="branch-label">
+                <span>📍</span>
+                <span>PRAGATHI NAGAR</span>
+              </div>
+              <div class="branch-telugu" lang="te">ప్రగతి నగర్ బ్రాంచ్</div>
+              <p class="branch-address">
+                Main Road, Pragathi Nagar, KPHB Colony Extension, Hyderabad
+              </p>
+            </div>
+          </div>
+
+          <!-- Service Meta & Timings -->
+          <div class="location-service-meta">
+            <span class="service-pill">
+              <span>🕒</span>
+              <span>Open Daily: <strong>11:00 AM – 11:00 PM</strong></span>
+            </span>
+
+            <span class="service-pill service-highlight">
+              <span>👨‍👩‍👧‍👦</span>
+              <span>AC & Garden Family Dining</span>
+            </span>
+
+            <span class="pure-veg-stamp">
+              <span class="veg-icon" aria-hidden="true"><span class="dot"></span></span>
+              <span>100% PURE VEG</span>
+            </span>
+          </div>
+        </footer>
+
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>
