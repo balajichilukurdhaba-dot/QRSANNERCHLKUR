@@ -1,50 +1,482 @@
-const categorySelect = document.querySelector('#category-select');
-const categoryRail = document.querySelector('.category-links');
-const categoryBar = document.querySelector('.category-bar');
-const categoryLinks = Array.from(categoryRail.querySelectorAll('a'));
-const sections = categoryLinks.map(link => document.getElementById(link.hash.slice(1))).filter(Boolean);
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-let activeId = '';
-let scheduled = false;
-categorySelect.addEventListener('change', () => {
-  const section = document.getElementById(categorySelect.value);
-  if (section) { location.hash = section.id; section.setAttribute('tabindex', '-1'); section.focus({preventScroll: true}); }
-});
-function setActiveCategory(id) {
-  if (id === activeId) return;
-  const selected = categoryLinks.find(link => link.hash.slice(1) === id);
-  if (!selected) return;
-  activeId = id;
-  categoryLinks.forEach(link => link.removeAttribute('aria-current'));
-  selected.setAttribute('aria-current', 'location');
-  categorySelect.value = id;
-  const rail = categoryRail.getBoundingClientRect();
-  const item = selected.getBoundingClientRect();
-  if (item.left < rail.left + 4 || item.right > rail.right - 4) {
-    categoryRail.scrollTo({
-      left: categoryRail.scrollLeft + item.left - rail.left - (rail.width - item.width) / 2,
-      behavior: reducedMotion.matches ? 'instant' : 'smooth'
+/**
+ * Balaji Chilukur Family Dhaba - Modern Interactive Menu
+ * Features:
+ * - Edge-to-edge sticky search & category chips carousel
+ * - Horizontal swipeable card rows with expand-to-grid toggle
+ * - Instant live search across English, Telugu & descriptions
+ * - Chef's Special & Popular Hits quick filters
+ * - Live Scrollspy with auto-centering category chips
+ * - Dish detail modal dialog with keyboard accessibility
+ * - Back to top floating button
+ */
+
+(function () {
+  'use strict';
+
+  // --- State Management ---
+  const state = {
+    activeCategory: 'all',
+    activeFilter: null, // null | 'special' | 'popular'
+    searchQuery: '',
+    expandedCategories: new Set(),
+    isManualScrolling: false,
+    manualScrollTimer: null
+  };
+
+  // --- DOM Elements ---
+  const elements = {
+    searchInput: document.getElementById('search-input'),
+    searchClearBtn: document.getElementById('search-clear-btn'),
+    categoryChipsScroll: document.getElementById('category-chips-scroll'),
+    specialFilterBtn: document.getElementById('filter-special-btn'),
+    popularFilterBtn: document.getElementById('filter-popular-btn'),
+    menuSectionsContainer: document.getElementById('menu-sections-container'),
+    searchStatusBar: document.getElementById('search-status-bar'),
+    searchResultCount: document.getElementById('search-result-count'),
+    resetSearchLink: document.getElementById('reset-search-link'),
+    noResults: document.getElementById('no-results'),
+    backToTopBtn: document.getElementById('back-to-top-btn'),
+
+    // Modal elements
+    dishModal: document.getElementById('dish-modal'),
+    modalCloseBtn: document.getElementById('modal-close-btn'),
+    modalImg: document.getElementById('modal-img'),
+    modalTitle: document.getElementById('modal-title'),
+    modalTelugu: document.getElementById('modal-telugu'),
+    modalCategory: document.getElementById('modal-category'),
+    modalBadgesContainer: document.getElementById('modal-badges-container'),
+    modalDescription: document.getElementById('modal-description')
+  };
+
+  const sections = Array.from(document.querySelectorAll('.catalogue-category-section'));
+  const cards = Array.from(document.querySelectorAll('.dish-card'));
+
+  // --- 1. Category Chips & Scrollspy ---
+  function updateActiveChip(catId, shouldCenter = true) {
+    if (!elements.categoryChipsScroll) return;
+    const chips = elements.categoryChipsScroll.querySelectorAll('.category-chip');
+    chips.forEach(chip => {
+      const match = chip.getAttribute('data-category') === catId;
+      chip.classList.toggle('active', match);
+      chip.setAttribute('aria-selected', match ? 'true' : 'false');
+      if (match && shouldCenter) {
+        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
     });
   }
-}
-function updateFromScroll() {
-  scheduled = false;
-  const anchorOffset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
-  const threshold = Math.max(categoryBar.getBoundingClientRect().height + 24, anchorOffset + 16);
-  let current = sections[0];
-  for (const section of sections) {
-    if (section.getBoundingClientRect().top <= threshold) current = section;
-    else break;
+
+  function selectCategory(catId) {
+    state.activeCategory = catId;
+    updateActiveChip(catId, true);
+
+    state.isManualScrolling = true;
+    clearTimeout(state.manualScrollTimer);
+    state.manualScrollTimer = setTimeout(() => {
+      state.isManualScrolling = false;
+    }, 900);
+
+    // If search or quick filters were active, reset them to restore all sections
+    if (state.searchQuery || state.activeFilter) {
+      state.searchQuery = '';
+      state.activeFilter = null;
+      if (elements.searchInput) elements.searchInput.value = '';
+      if (elements.searchClearBtn) elements.searchClearBtn.style.display = 'none';
+      if (elements.specialFilterBtn) elements.specialFilterBtn.classList.remove('active');
+      if (elements.popularFilterBtn) elements.popularFilterBtn.classList.remove('active');
+      applyFilters();
+    }
+
+    if (catId === 'all') {
+      const target = document.getElementById('sticky-nav-bar') || document.getElementById('main-content');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      const targetSec = document.getElementById(`section-${catId}`);
+      if (targetSec) {
+        targetSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
-  if (current) setActiveCategory(current.id);
-}
-function scheduleUpdate() {
-  if (scheduled) return;
-  scheduled = true;
-  requestAnimationFrame(updateFromScroll);
-}
-window.addEventListener('scroll', scheduleUpdate, {passive: true});
-window.addEventListener('resize', scheduleUpdate);
-window.addEventListener('hashchange', scheduleUpdate);
-window.addEventListener('load', scheduleUpdate);
-updateFromScroll();
+
+  function setupCategoryChips() {
+    if (!elements.categoryChipsScroll) return;
+    const chips = elements.categoryChipsScroll.querySelectorAll('.category-chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const catId = chip.getAttribute('data-category');
+        selectCategory(catId);
+      });
+    });
+  }
+
+  // --- 2. Live Scrollspy ---
+  function handleScrollspy() {
+    if (state.isManualScrolling) return;
+    if (state.searchQuery || state.activeFilter) return;
+    if (!sections.length) return;
+
+    const stickyBar = document.getElementById('sticky-nav-bar');
+    const stickyBottom = stickyBar ? stickyBar.getBoundingClientRect().bottom : 120;
+    const triggerPoint = stickyBottom + 40;
+
+    const firstSection = sections[0];
+    const firstRect = firstSection.getBoundingClientRect();
+    if (firstRect.top > triggerPoint) {
+      if (state.activeCategory !== 'all') {
+        state.activeCategory = 'all';
+        updateActiveChip('all', true);
+      }
+      return;
+    }
+
+    let activeCatId = 'all';
+    for (let i = 0; i < sections.length; i++) {
+      const sec = sections[i];
+      const rect = sec.getBoundingClientRect();
+      if (rect.top <= triggerPoint) {
+        activeCatId = sec.getAttribute('data-category-id') || sec.id.replace('section-', '');
+      } else {
+        break;
+      }
+    }
+
+    if (activeCatId && activeCatId !== state.activeCategory) {
+      state.activeCategory = activeCatId;
+      updateActiveChip(activeCatId, true);
+    }
+  }
+
+  // --- 3. Filtering & Search Logic ---
+  function applyFilters() {
+    const query = state.searchQuery.toLowerCase().trim();
+    const isSearching = query.length > 0;
+    const hasFilter = Boolean(state.activeFilter);
+    const isFilteredOrSearch = isSearching || hasFilter;
+
+    let totalVisibleDishes = 0;
+
+    sections.forEach(section => {
+      const catId = section.getAttribute('data-category-id');
+      const track = document.getElementById(`track-${catId}`);
+      const sectionCards = Array.from(section.querySelectorAll('.dish-card'));
+      const expandBtn = section.querySelector('.category-expand-btn');
+
+      let visibleInSec = 0;
+
+      sectionCards.forEach(card => {
+        const title = (card.getAttribute('data-title') || '').toLowerCase();
+        const telugu = (card.getAttribute('data-telugu') || '').toLowerCase();
+        const desc = (card.getAttribute('data-desc') || '').toLowerCase();
+        const category = (card.getAttribute('data-category') || '').toLowerCase();
+        const isSpecial = card.getAttribute('data-special') === 'true';
+        const isPopular = card.getAttribute('data-popular') === 'true';
+
+        let matches = true;
+
+        if (state.activeFilter === 'special' && !isSpecial) matches = false;
+        if (state.activeFilter === 'popular' && !isPopular) matches = false;
+
+        if (matches && isSearching) {
+          const matchQuery = title.includes(query) || telugu.includes(query) || desc.includes(query) || category.includes(query);
+          if (!matchQuery) matches = false;
+        }
+
+        if (matches) {
+          card.style.display = '';
+          visibleInSec++;
+          totalVisibleDishes++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      if (visibleInSec === 0) {
+        section.style.display = 'none';
+      } else {
+        section.style.display = 'block';
+
+        // When searching or quick-filtered, display in full grid view for easy browsing
+        if (isFilteredOrSearch) {
+          if (track) {
+            track.classList.add('catalogue-grid-view');
+            track.classList.remove('catalogue-row-track');
+          }
+          if (expandBtn) expandBtn.style.display = 'none';
+        } else {
+          // Restore user's expanded state or row track
+          const isExpanded = state.expandedCategories.has(catId);
+          if (track) {
+            if (isExpanded) {
+              track.classList.add('catalogue-grid-view');
+              track.classList.remove('catalogue-row-track');
+            } else {
+              track.classList.remove('catalogue-grid-view');
+              track.classList.add('catalogue-row-track');
+            }
+          }
+          if (expandBtn) {
+            expandBtn.style.display = '';
+            expandBtn.classList.toggle('expanded', isExpanded);
+            const spanText = expandBtn.querySelector('span');
+            if (spanText) {
+              spanText.textContent = isExpanded
+                ? 'Show Curated Row'
+                : `View All ${sectionCards.length} ${section.querySelector('.category-title').textContent} Dishes`;
+            }
+          }
+        }
+      }
+    });
+
+    // Search status bar update
+    if (elements.searchStatusBar) {
+      if (isFilteredOrSearch) {
+        elements.searchStatusBar.style.display = 'flex';
+        if (elements.searchResultCount) {
+          elements.searchResultCount.textContent = `Found ${totalVisibleDishes} ${totalVisibleDishes === 1 ? 'dish' : 'dishes'}`;
+        }
+      } else {
+        elements.searchStatusBar.style.display = 'none';
+      }
+    }
+
+    // No results state
+    if (elements.noResults) {
+      elements.noResults.style.display = totalVisibleDishes === 0 ? 'flex' : 'none';
+    }
+  }
+
+  function setupSearchAndFilters() {
+    let debounceTimer;
+
+    if (elements.searchInput) {
+      elements.searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        state.searchQuery = e.target.value;
+
+        if (elements.searchClearBtn) {
+          elements.searchClearBtn.style.display = state.searchQuery.length > 0 ? 'block' : 'none';
+        }
+
+        debounceTimer = setTimeout(applyFilters, 120);
+      });
+    }
+
+    if (elements.searchClearBtn) {
+      elements.searchClearBtn.addEventListener('click', () => {
+        if (elements.searchInput) elements.searchInput.value = '';
+        state.searchQuery = '';
+        elements.searchClearBtn.style.display = 'none';
+        applyFilters();
+        if (elements.searchInput) elements.searchInput.focus();
+      });
+    }
+
+    if (elements.resetSearchLink) {
+      elements.resetSearchLink.addEventListener('click', () => {
+        if (elements.searchInput) elements.searchInput.value = '';
+        state.searchQuery = '';
+        state.activeFilter = null;
+        state.activeCategory = 'all';
+        if (elements.searchClearBtn) elements.searchClearBtn.style.display = 'none';
+        if (elements.specialFilterBtn) elements.specialFilterBtn.classList.remove('active');
+        if (elements.popularFilterBtn) elements.popularFilterBtn.classList.remove('active');
+        updateActiveChip('all', true);
+        applyFilters();
+      });
+    }
+
+    if (elements.specialFilterBtn) {
+      elements.specialFilterBtn.addEventListener('click', () => {
+        if (state.activeFilter === 'special') {
+          state.activeFilter = null;
+          elements.specialFilterBtn.classList.remove('active');
+        } else {
+          state.activeFilter = 'special';
+          elements.specialFilterBtn.classList.add('active');
+          if (elements.popularFilterBtn) elements.popularFilterBtn.classList.remove('active');
+        }
+        applyFilters();
+      });
+    }
+
+    if (elements.popularFilterBtn) {
+      elements.popularFilterBtn.addEventListener('click', () => {
+        if (state.activeFilter === 'popular') {
+          state.activeFilter = null;
+          elements.popularFilterBtn.classList.remove('active');
+        } else {
+          state.activeFilter = 'popular';
+          elements.popularFilterBtn.classList.add('active');
+          if (elements.specialFilterBtn) elements.specialFilterBtn.classList.remove('active');
+        }
+        applyFilters();
+      });
+    }
+  }
+
+  // --- 4. Expand / Collapse Rows ---
+  function setupExpandButtons() {
+    const expandBtns = document.querySelectorAll('.category-expand-btn');
+    expandBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const catId = btn.getAttribute('data-category-expand');
+        const track = document.getElementById(`track-${catId}`);
+        const isExpanded = state.expandedCategories.has(catId);
+
+        if (isExpanded) {
+          state.expandedCategories.delete(catId);
+          if (track) {
+            track.classList.remove('catalogue-grid-view');
+            track.classList.add('catalogue-row-track');
+          }
+          btn.classList.remove('expanded');
+          btn.setAttribute('aria-expanded', 'false');
+          const spanText = btn.querySelector('span');
+          const sec = document.getElementById(`section-${catId}`);
+          const catTitle = sec ? sec.querySelector('.category-title').textContent : '';
+          const count = sec ? sec.querySelectorAll('.dish-card').length : '';
+          if (spanText) spanText.textContent = `View All ${count} ${catTitle} Dishes`;
+        } else {
+          state.expandedCategories.add(catId);
+          if (track) {
+            track.classList.add('catalogue-grid-view');
+            track.classList.remove('catalogue-row-track');
+          }
+          btn.classList.add('expanded');
+          btn.setAttribute('aria-expanded', 'true');
+          const spanText = btn.querySelector('span');
+          if (spanText) spanText.textContent = 'Show Curated Row';
+        }
+      });
+    });
+  }
+
+  // --- 5. Dish Detail Modal ---
+  function openDishModal(card) {
+    if (!elements.dishModal) return;
+
+    const title = card.getAttribute('data-title') || '';
+    const telugu = card.getAttribute('data-telugu') || '';
+    const desc = card.getAttribute('data-desc') || '';
+    const category = card.getAttribute('data-category') || '';
+    const img = card.getAttribute('data-img') || '';
+    const isSpecial = card.getAttribute('data-special') === 'true';
+    const isPopular = card.getAttribute('data-popular') === 'true';
+
+    elements.modalImg.src = img;
+    elements.modalImg.alt = title;
+    elements.modalTitle.textContent = title;
+    elements.modalCategory.textContent = category;
+
+    if (telugu) {
+      elements.modalTelugu.textContent = telugu;
+      elements.modalTelugu.style.display = 'block';
+    } else {
+      elements.modalTelugu.style.display = 'none';
+    }
+
+    elements.modalDescription.textContent = desc || 'Authentic traditional recipe prepared with fresh farm ingredients and aromatic spices.';
+
+    let badgesHtml = `
+      <span class="hero-top-badge" style="margin-bottom:0; padding:4px 12px; font-size:0.75rem;">
+        <span class="veg-mark"><span class="dot"></span></span>
+        100% Pure Veg
+      </span>
+    `;
+
+    if (isSpecial) {
+      badgesHtml += `<span class="badge-tag badge-chef-special">★ Chef Special</span>`;
+    }
+    if (isPopular && !isSpecial) {
+      badgesHtml += `<span class="badge-tag badge-popular">🔥 Popular</span>`;
+    }
+
+    elements.modalBadgesContainer.innerHTML = badgesHtml;
+
+    elements.dishModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    elements.dishModal.focus();
+  }
+
+  function closeDishModal() {
+    if (!elements.dishModal) return;
+    elements.dishModal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function setupDishCards() {
+    cards.forEach(card => {
+      card.addEventListener('click', () => openDishModal(card));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDishModal(card);
+        }
+      });
+    });
+
+    if (elements.modalCloseBtn) {
+      elements.modalCloseBtn.addEventListener('click', closeDishModal);
+    }
+
+    if (elements.dishModal) {
+      elements.dishModal.addEventListener('click', (e) => {
+        if (e.target === elements.dishModal) {
+          closeDishModal();
+        }
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && elements.dishModal && elements.dishModal.classList.contains('active')) {
+        closeDishModal();
+      }
+    });
+  }
+
+  // --- 6. Scroll & Back to Top Handlers ---
+  function setupScrollHandlers() {
+    let ticking = false;
+
+    window.addEventListener('scroll', () => {
+      if (elements.backToTopBtn) {
+        if (window.scrollY > 400) {
+          elements.backToTopBtn.classList.add('visible');
+        } else {
+          elements.backToTopBtn.classList.remove('visible');
+        }
+      }
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScrollspy();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    if (elements.backToTopBtn) {
+      elements.backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+  }
+
+  // --- Initialization ---
+  function init() {
+    setupCategoryChips();
+    setupSearchAndFilters();
+    setupExpandButtons();
+    setupDishCards();
+    setupScrollHandlers();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
