@@ -1,6 +1,6 @@
 /**
- * Balaji Chilukur Family Dhaba - High-Performance Digital Menu
- * Optimized for 60fps/120fps smooth scrolling on mobile & desktop
+ * Balaji Chilukur Family Dhaba - Smooth Interactive Menu
+ * Designed for 60fps/120fps fluid scrolling on all mobile and desktop devices.
  */
 
 (function () {
@@ -42,9 +42,9 @@
   };
 
   const sections = Array.from(document.querySelectorAll('.catalogue-category-section'));
-  const cards = Array.from(document.querySelectorAll('.dish-card'));
+  const allCards = Array.from(document.querySelectorAll('.dish-card'));
 
-  // --- 1. Category Chips & Scrollspy ---
+  // --- 1. Category Chips & Horizontal Scrolling ---
   function updateActiveChip(catId, shouldCenter = false) {
     if (!elements.categoryChipsScroll) return;
     const chips = elements.categoryChipsScroll.querySelectorAll('.category-chip');
@@ -53,28 +53,18 @@
       chip.classList.toggle('active', match);
       chip.setAttribute('aria-selected', match ? 'true' : 'false');
       if (match && shouldCenter) {
-        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        centerChipInCarousel(chip);
       }
     });
   }
 
-  // Debounced gentle centering for the chips bar when user pauses scrolling
-  let chipCenterTimer = null;
-  function debouncedCenterActiveChip(catId) {
-    clearTimeout(chipCenterTimer);
-    chipCenterTimer = setTimeout(() => {
-      if (state.isManualScrolling) return;
-      const activeChip = elements.categoryChipsScroll?.querySelector(`.category-chip[data-category="${catId}"]`);
-      if (activeChip && elements.categoryChipsScroll) {
-        const container = elements.categoryChipsScroll;
-        const chipRect = activeChip.getBoundingClientRect();
-        const contRect = container.getBoundingClientRect();
-        // Only scroll horizontally if active chip is cut off or near edges
-        if (chipRect.left < contRect.left + 16 || chipRect.right > contRect.right - 16) {
-          activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }
-      }
-    }, 180);
+  function centerChipInCarousel(chip) {
+    const container = elements.categoryChipsScroll;
+    if (!container || !chip) return;
+    const chipLeft = chip.offsetLeft;
+    const chipWidth = chip.offsetWidth;
+    const targetScroll = chipLeft - (container.offsetWidth / 2) + (chipWidth / 2);
+    container.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' });
   }
 
   function selectCategory(catId) {
@@ -85,7 +75,7 @@
     clearTimeout(state.manualScrollTimer);
     state.manualScrollTimer = setTimeout(() => {
       state.isManualScrolling = false;
-    }, 800);
+    }, 850);
 
     // If search or quick filters were active, reset them to restore all sections
     if (state.searchQuery || state.activeFilter) {
@@ -122,75 +112,53 @@
     });
   }
 
-  // --- 2. High-Performance Scrollspy with IntersectionObserver ---
-  let activeCatObserver = null;
-  function setupScrollspy() {
-    if (!('IntersectionObserver' in window)) {
-      // Fallback for older browsers
-      setupScrollspyFallback();
+  // --- 2. Smooth Lightweight Scrollspy (Zero Layout Thrashing) ---
+  let scrollTicking = false;
+  let chipCenterTimer = null;
+
+  function handleCategoryScrollspy() {
+    if (state.isManualScrolling) return;
+    if (state.searchQuery || state.activeFilter) return;
+    if (!sections.length) return;
+
+    const stickyBar = document.getElementById('sticky-nav-bar');
+    const stickyBottom = stickyBar ? stickyBar.getBoundingClientRect().bottom : 110;
+    const triggerPoint = stickyBottom + 30;
+
+    const firstSection = sections[0];
+    const firstRect = firstSection.getBoundingClientRect();
+    if (firstRect.top > triggerPoint) {
+      if (state.activeCategory !== 'all') {
+        state.activeCategory = 'all';
+        updateActiveChip('all', false);
+      }
       return;
     }
 
-    if (activeCatObserver) activeCatObserver.disconnect();
+    let activeCatId = 'all';
+    for (let i = 0; i < sections.length; i++) {
+      const sec = sections[i];
+      const rect = sec.getBoundingClientRect();
+      if (rect.top <= triggerPoint) {
+        activeCatId = sec.getAttribute('data-category-id') || sec.id.replace('section-', '');
+      } else {
+        break;
+      }
+    }
 
-    activeCatObserver = new IntersectionObserver((entries) => {
-      if (state.isManualScrolling || state.searchQuery || state.activeFilter) return;
+    if (activeCatId && activeCatId !== state.activeCategory) {
+      state.activeCategory = activeCatId;
+      updateActiveChip(activeCatId, false);
 
-      const visibleEntries = entries.filter(e => e.isIntersecting);
-      if (!visibleEntries.length) {
-        if (window.scrollY < 240) {
-          if (state.activeCategory !== 'all') {
-            state.activeCategory = 'all';
-            updateActiveChip('all', false);
-          }
+      // Gently center chip in the carousel only after scroll pauses
+      clearTimeout(chipCenterTimer);
+      chipCenterTimer = setTimeout(() => {
+        if (!state.isManualScrolling) {
+          const activeChip = elements.categoryChipsScroll?.querySelector(`.category-chip[data-category="${activeCatId}"]`);
+          if (activeChip) centerChipInCarousel(activeChip);
         }
-        return;
-      }
-
-      visibleEntries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      const topEntry = visibleEntries[0];
-      const catId = topEntry.target.getAttribute('data-category-id');
-
-      if (catId && catId !== state.activeCategory) {
-        state.activeCategory = catId;
-        updateActiveChip(catId, false);
-        debouncedCenterActiveChip(catId);
-      }
-    }, {
-      rootMargin: '-110px 0px -65% 0px',
-      threshold: 0
-    });
-
-    sections.forEach(sec => activeCatObserver.observe(sec));
-  }
-
-  function setupScrollspyFallback() {
-    let scrollTicking = false;
-    window.addEventListener('scroll', () => {
-      if (state.isManualScrolling || state.searchQuery || state.activeFilter) return;
-      if (!scrollTicking) {
-        window.requestAnimationFrame(() => {
-          const trigger = 160;
-          let currentId = 'all';
-          for (let i = 0; i < sections.length; i++) {
-            const sec = sections[i];
-            const rect = sec.getBoundingClientRect();
-            if (rect.top <= trigger) {
-              currentId = sec.getAttribute('data-category-id') || 'all';
-            } else {
-              break;
-            }
-          }
-          if (currentId !== state.activeCategory) {
-            state.activeCategory = currentId;
-            updateActiveChip(currentId, false);
-            debouncedCenterActiveChip(currentId);
-          }
-          scrollTicking = false;
-        });
-        scrollTicking = true;
-      }
-    }, { passive: true });
+      }, 150);
+    }
   }
 
   // --- 3. Filtering & Search Logic ---
@@ -229,9 +197,23 @@
         }
 
         if (matches) {
-          card.style.display = '';
-          visibleInSec++;
-          totalVisibleDishes++;
+          // If searching or filter is active, show all matching cards including extra
+          if (isFilteredOrSearch) {
+            card.style.display = '';
+            visibleInSec++;
+            totalVisibleDishes++;
+          } else {
+            // Normal curated row view vs expanded
+            const isExtra = card.classList.contains('extra-dish');
+            const isExpanded = state.expandedCategories.has(catId);
+            if (isExtra && !isExpanded) {
+              card.style.display = 'none';
+            } else {
+              card.style.display = '';
+              visibleInSec++;
+              totalVisibleDishes++;
+            }
+          }
         } else {
           card.style.display = 'none';
         }
@@ -301,7 +283,7 @@
           elements.searchClearBtn.style.display = state.searchQuery.length > 0 ? 'block' : 'none';
         }
 
-        debounceTimer = setTimeout(applyFilters, 120);
+        debounceTimer = setTimeout(applyFilters, 100);
       });
     }
 
@@ -365,6 +347,8 @@
       btn.addEventListener('click', () => {
         const catId = btn.getAttribute('data-category-expand');
         const track = document.getElementById(`track-${catId}`);
+        const sec = document.getElementById(`section-${catId}`);
+        const extraDishes = sec ? sec.querySelectorAll('.extra-dish') : [];
         const isExpanded = state.expandedCategories.has(catId);
 
         if (isExpanded) {
@@ -373,10 +357,10 @@
             track.classList.remove('catalogue-grid-view');
             track.classList.add('catalogue-row-track');
           }
+          extraDishes.forEach(c => c.style.display = 'none');
           btn.classList.remove('expanded');
           btn.setAttribute('aria-expanded', 'false');
           const spanText = btn.querySelector('span');
-          const sec = document.getElementById(`section-${catId}`);
           const catTitle = sec ? sec.querySelector('.category-title').textContent : '';
           const count = sec ? sec.querySelectorAll('.dish-card').length : '';
           if (spanText) spanText.textContent = `View All ${count} ${catTitle} Dishes`;
@@ -386,6 +370,7 @@
             track.classList.add('catalogue-grid-view');
             track.classList.remove('catalogue-row-track');
           }
+          extraDishes.forEach(c => c.style.display = '');
           btn.classList.add('expanded');
           btn.setAttribute('aria-expanded', 'true');
           const spanText = btn.querySelector('span');
@@ -449,7 +434,7 @@
   }
 
   function setupDishCards() {
-    cards.forEach(card => {
+    allCards.forEach(card => {
       card.addEventListener('click', () => openDishModal(card));
       card.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -478,19 +463,20 @@
     });
   }
 
-  // --- 6. Throttled Back to Top Button ---
+  // --- 6. Unified Scroll Handler (Passively Throttled) ---
   function setupScrollHandlers() {
-    let ticking = false;
-
     window.addEventListener('scroll', () => {
-      if (!ticking) {
+      if (!scrollTicking) {
         window.requestAnimationFrame(() => {
+          // Back to top button
           if (elements.backToTopBtn) {
             elements.backToTopBtn.classList.toggle('visible', window.scrollY > 400);
           }
-          ticking = false;
+          // Category Scrollspy
+          handleCategoryScrollspy();
+          scrollTicking = false;
         });
-        ticking = true;
+        scrollTicking = true;
       }
     }, { passive: true });
 
@@ -504,7 +490,6 @@
   // --- Initialization ---
   function init() {
     setupCategoryChips();
-    setupScrollspy();
     setupSearchAndFilters();
     setupExpandButtons();
     setupDishCards();
