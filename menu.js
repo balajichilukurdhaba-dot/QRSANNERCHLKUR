@@ -1,13 +1,6 @@
 /**
- * Balaji Chilukur Family Dhaba - Modern Interactive Menu
- * Features:
- * - Edge-to-edge sticky search & category chips carousel
- * - Horizontal swipeable card rows with expand-to-grid toggle
- * - Instant live search across English, Telugu & descriptions
- * - Chef's Special & Popular Hits quick filters
- * - Live Scrollspy with auto-centering category chips
- * - Dish detail modal dialog with keyboard accessibility
- * - Back to top floating button
+ * Balaji Chilukur Family Dhaba - High-Performance Digital Menu
+ * Optimized for 60fps/120fps smooth scrolling on mobile & desktop
  */
 
 (function () {
@@ -52,7 +45,7 @@
   const cards = Array.from(document.querySelectorAll('.dish-card'));
 
   // --- 1. Category Chips & Scrollspy ---
-  function updateActiveChip(catId, shouldCenter = true) {
+  function updateActiveChip(catId, shouldCenter = false) {
     if (!elements.categoryChipsScroll) return;
     const chips = elements.categoryChipsScroll.querySelectorAll('.category-chip');
     chips.forEach(chip => {
@@ -65,6 +58,25 @@
     });
   }
 
+  // Debounced gentle centering for the chips bar when user pauses scrolling
+  let chipCenterTimer = null;
+  function debouncedCenterActiveChip(catId) {
+    clearTimeout(chipCenterTimer);
+    chipCenterTimer = setTimeout(() => {
+      if (state.isManualScrolling) return;
+      const activeChip = elements.categoryChipsScroll?.querySelector(`.category-chip[data-category="${catId}"]`);
+      if (activeChip && elements.categoryChipsScroll) {
+        const container = elements.categoryChipsScroll;
+        const chipRect = activeChip.getBoundingClientRect();
+        const contRect = container.getBoundingClientRect();
+        // Only scroll horizontally if active chip is cut off or near edges
+        if (chipRect.left < contRect.left + 16 || chipRect.right > contRect.right - 16) {
+          activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }
+    }, 180);
+  }
+
   function selectCategory(catId) {
     state.activeCategory = catId;
     updateActiveChip(catId, true);
@@ -73,7 +85,7 @@
     clearTimeout(state.manualScrollTimer);
     state.manualScrollTimer = setTimeout(() => {
       state.isManualScrolling = false;
-    }, 900);
+    }, 800);
 
     // If search or quick filters were active, reset them to restore all sections
     if (state.searchQuery || state.activeFilter) {
@@ -110,41 +122,75 @@
     });
   }
 
-  // --- 2. Live Scrollspy ---
-  function handleScrollspy() {
-    if (state.isManualScrolling) return;
-    if (state.searchQuery || state.activeFilter) return;
-    if (!sections.length) return;
-
-    const stickyBar = document.getElementById('sticky-nav-bar');
-    const stickyBottom = stickyBar ? stickyBar.getBoundingClientRect().bottom : 120;
-    const triggerPoint = stickyBottom + 40;
-
-    const firstSection = sections[0];
-    const firstRect = firstSection.getBoundingClientRect();
-    if (firstRect.top > triggerPoint) {
-      if (state.activeCategory !== 'all') {
-        state.activeCategory = 'all';
-        updateActiveChip('all', true);
-      }
+  // --- 2. High-Performance Scrollspy with IntersectionObserver ---
+  let activeCatObserver = null;
+  function setupScrollspy() {
+    if (!('IntersectionObserver' in window)) {
+      // Fallback for older browsers
+      setupScrollspyFallback();
       return;
     }
 
-    let activeCatId = 'all';
-    for (let i = 0; i < sections.length; i++) {
-      const sec = sections[i];
-      const rect = sec.getBoundingClientRect();
-      if (rect.top <= triggerPoint) {
-        activeCatId = sec.getAttribute('data-category-id') || sec.id.replace('section-', '');
-      } else {
-        break;
-      }
-    }
+    if (activeCatObserver) activeCatObserver.disconnect();
 
-    if (activeCatId && activeCatId !== state.activeCategory) {
-      state.activeCategory = activeCatId;
-      updateActiveChip(activeCatId, true);
-    }
+    activeCatObserver = new IntersectionObserver((entries) => {
+      if (state.isManualScrolling || state.searchQuery || state.activeFilter) return;
+
+      const visibleEntries = entries.filter(e => e.isIntersecting);
+      if (!visibleEntries.length) {
+        if (window.scrollY < 240) {
+          if (state.activeCategory !== 'all') {
+            state.activeCategory = 'all';
+            updateActiveChip('all', false);
+          }
+        }
+        return;
+      }
+
+      visibleEntries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      const topEntry = visibleEntries[0];
+      const catId = topEntry.target.getAttribute('data-category-id');
+
+      if (catId && catId !== state.activeCategory) {
+        state.activeCategory = catId;
+        updateActiveChip(catId, false);
+        debouncedCenterActiveChip(catId);
+      }
+    }, {
+      rootMargin: '-110px 0px -65% 0px',
+      threshold: 0
+    });
+
+    sections.forEach(sec => activeCatObserver.observe(sec));
+  }
+
+  function setupScrollspyFallback() {
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+      if (state.isManualScrolling || state.searchQuery || state.activeFilter) return;
+      if (!scrollTicking) {
+        window.requestAnimationFrame(() => {
+          const trigger = 160;
+          let currentId = 'all';
+          for (let i = 0; i < sections.length; i++) {
+            const sec = sections[i];
+            const rect = sec.getBoundingClientRect();
+            if (rect.top <= trigger) {
+              currentId = sec.getAttribute('data-category-id') || 'all';
+            } else {
+              break;
+            }
+          }
+          if (currentId !== state.activeCategory) {
+            state.activeCategory = currentId;
+            updateActiveChip(currentId, false);
+            debouncedCenterActiveChip(currentId);
+          }
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
+    }, { passive: true });
   }
 
   // --- 3. Filtering & Search Logic ---
@@ -196,7 +242,6 @@
       } else {
         section.style.display = 'block';
 
-        // When searching or quick-filtered, display in full grid view for easy browsing
         if (isFilteredOrSearch) {
           if (track) {
             track.classList.add('catalogue-grid-view');
@@ -204,7 +249,6 @@
           }
           if (expandBtn) expandBtn.style.display = 'none';
         } else {
-          // Restore user's expanded state or row track
           const isExpanded = state.expandedCategories.has(catId);
           if (track) {
             if (isExpanded) {
@@ -229,7 +273,6 @@
       }
     });
 
-    // Search status bar update
     if (elements.searchStatusBar) {
       if (isFilteredOrSearch) {
         elements.searchStatusBar.style.display = 'flex';
@@ -241,7 +284,6 @@
       }
     }
 
-    // No results state
     if (elements.noResults) {
       elements.noResults.style.display = totalVisibleDishes === 0 ? 'flex' : 'none';
     }
@@ -436,22 +478,16 @@
     });
   }
 
-  // --- 6. Scroll & Back to Top Handlers ---
+  // --- 6. Throttled Back to Top Button ---
   function setupScrollHandlers() {
     let ticking = false;
 
     window.addEventListener('scroll', () => {
-      if (elements.backToTopBtn) {
-        if (window.scrollY > 400) {
-          elements.backToTopBtn.classList.add('visible');
-        } else {
-          elements.backToTopBtn.classList.remove('visible');
-        }
-      }
-
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          handleScrollspy();
+          if (elements.backToTopBtn) {
+            elements.backToTopBtn.classList.toggle('visible', window.scrollY > 400);
+          }
           ticking = false;
         });
         ticking = true;
@@ -468,6 +504,7 @@
   // --- Initialization ---
   function init() {
     setupCategoryChips();
+    setupScrollspy();
     setupSearchAndFilters();
     setupExpandButtons();
     setupDishCards();
