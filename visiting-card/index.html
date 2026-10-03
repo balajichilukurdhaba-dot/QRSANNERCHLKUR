@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visiting Card | Balaji Chilukur Family Dhaba</title>
+  <meta name="description" content="Official Double-Sided Visiting Card for Balaji Chilukur Family Dhaba. Featuring instant-scannable QR codes for Digital Menu, Google Maps Location, and Google Reviews." />
+  <link rel="icon" href="../logo.png?v=20260913" type="image/png" />
+
+  <!-- Google Fonts: Cinzel & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #1a1e21;
+      --card-green: #0e3820;
+      --card-gold: #cda75f;
+      --card-cream: #fffdf9;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .header-bar {
+      text-align: center;
+      margin-bottom: 30px;
+      max-width: 800px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(205, 167, 95, 0.15);
+      border: 1px solid var(--card-gold);
+      color: var(--card-gold);
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 14px;
+      margin-top: 18px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #cda75f, #b88d3e);
+      color: #0e3820;
+    }
+    .btn-gold:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Cards Showcase Grid */
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      width: 100%;
+      max-width: 900px;
+      align-items: center;
+    }
+
+    .card-wrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--card-gold);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-image {
+      width: 100%;
+      max-width: 850px;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(205, 167, 95, 0.3);
+      display: block;
+      background: #ffffff;
+    }
+
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+      }
+      .header-bar, .actions, .card-label {
+        display: none !important;
+      }
+      .cards-container {
+        gap: 20px;
+        max-width: 100%;
+      }
+      .card-image {
+        max-width: 3.5in;
+        box-shadow: none;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-bar">
+    <span class="badge">Official Brand Stationery</span>
+    <h1>Balaji Chilukur Family Dhaba</h1>
+    <p class="subtitle">Luxury Double-Sided Visiting Card · Verified 100% Scannable QR Codes</p>
+
+    <div class="actions">
+      <button class="btn btn-gold" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      <a class="btn btn-outline" href="card-front.png" download="balaji-dhaba-card-front.png">⬇ Front PNG (300 DPI)</a>
+      <a class="btn btn-outline" href="card-back.png" download="balaji-dhaba-card-back.png">⬇ Back PNG (300 DPI)</a>
+      <a class="btn btn-outline" href="../menu/">🍽 View Menu</a>
+    </div>
+  </div>
+
+  <div class="cards-container">
+    <!-- FRONT SIDE -->
+    <div class="card-wrapper">
+      <div class="card-label">✨ FRONT SIDE — DIGITAL MENU QR</div>
+      <img class="card-image" src="card-front.png" alt="Visiting Card Front - Menu QR Code" width="1050" height="600" />
+    </div>
+
+    <!-- BACK SIDE -->
+    <div class="card-wrapper">
+      <div class="card-label">📍 BACK SIDE — GOOGLE MAPS LOCATION &amp; REVIEWS QR</div>
+      <img class="card-image" src="card-back.png" alt="Visiting Card Back - Location and Google Reviews QR Codes" width="1050" height="600" />
+    </div>
+  </div>
+
+</body>
+</html>
